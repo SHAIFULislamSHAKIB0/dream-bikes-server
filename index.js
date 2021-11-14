@@ -22,6 +22,7 @@ async function run() {
         const database = client.db("dreamBikes");
         const bikesCollection = database.collection("bikes");
         const ordersCollection = database.collection("orders");
+        const usersCollection = database.collection("users");
 
         // POST API'S
         app.post('/bikes', async (req, res) => {
@@ -39,7 +40,44 @@ async function run() {
             res.json(result)
         })
 
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            res.json(result);
+        })
+
+        // PUT API'S
+        app.put('/users', async (req, res) => {
+            const user = req.body;
+            // console.log('put', user);
+            const filter = { email: user.email };
+            const options = { upsert: true };
+            const updateDoc = { $set: user };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.json(result);
+        });
+
+        app.put('/users/admin', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const updateDoc = { $set: { role: 'admin' } };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.json(result);
+        })
+
         // GET API'S
+
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role) {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        })
+
         app.get('/orders', async (req, res) => {
             /* const email = req.query.email;
             const query = { email: email } */
