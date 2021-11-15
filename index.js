@@ -23,12 +23,19 @@ async function run() {
         const bikesCollection = database.collection("bikes");
         const ordersCollection = database.collection("orders");
         const usersCollection = database.collection("users");
+        const reviewsCollection = database.collection("reviews");
 
         // POST API'S
         app.post('/bikes', async (req, res) => {
             const bike = req.body;
             // console.log('post hitted', place);
             const result = await bikesCollection.insertOne(bike)
+            res.json(result)
+        })
+
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            const result = await reviewsCollection.insertOne(review)
             res.json(result)
         })
 
@@ -92,6 +99,12 @@ async function run() {
             res.send(bikes);
         })
 
+        app.get('/reviews', async (req, res) => {
+            const cursor = reviewsCollection.find({});
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        })
+
         // GET SINGLE bikes
         app.get('/bikes/:id', async (req, res) => {
             const id = req.params.id;
@@ -116,6 +129,21 @@ async function run() {
             const result = await ordersCollection.deleteOne(query);
             res.json(result);
         })
+
+        // Update status
+
+        app.put("/updateStatus/:id", (req, res) => {
+            const id = req.params.id;
+            const updatedStatus = req.body.status;
+            const filter = { _id: ObjectId(id) };
+            ordersCollection
+                .updateOne(filter, {
+                    $set: { status: updatedStatus },
+                })
+                .then((result) => {
+                    res.send(result);
+                });
+        });
 
 
     }
